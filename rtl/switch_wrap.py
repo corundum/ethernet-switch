@@ -43,7 +43,7 @@ def generate(ports=4, name=None, output=None):
 
     t = Template(u"""/*
 
-Copyright (c) 2018-2021 Alex Forencich
+Copyright (c) Corundum organization
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

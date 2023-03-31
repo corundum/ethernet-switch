@@ -112,8 +112,8 @@ async def run_test(dut, payload_lengths=None, payload_data=None, idle_inserter=N
         tdest_int = int(''.join(map(str, tdest)), 2)
         test_frame.tdest = tdest_int
 
-        test_frame.tuser = len(payload)%USER_WIDTH
-        test_frame.tid = len(payload)%ID_WIDTH
+        test_frame.tuser = len(payload)%(2**USER_WIDTH)
+        test_frame.tid = len(payload)%(2**ID_WIDTH)
 
         test_frames.append(test_frame)
 
@@ -266,7 +266,7 @@ axis_rtl_dir = os.path.abspath(os.path.join(lib_dir, 'verilog-axis', 'rtl'))
 # each run
 @pytest.mark.parametrize("data_width", [8, 16, 32, 64, 128, 256, 512])
 @pytest.mark.parametrize("radix", [4])
-def test_switch_wrap(request, data_width, radix):
+def test_switch_iq_wrap(request, data_width, radix):
     dut = "switch_iq"
     wrapper = f"{dut}_wrap_{radix}x{radix}"    
     module = os.path.splitext(os.path.basename(__file__))[0]
