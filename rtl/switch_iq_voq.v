@@ -26,7 +26,7 @@ THE SOFTWARE.
 `timescale 1ns / 1ps
 `default_nettype none
 
-module switch #
+module switch_iq_voq #
 (
     // AXI streaming interface parameters
     // Width of data bus in bits
@@ -181,7 +181,7 @@ wire [RADIX*AXIS_DEST_WIDTH-1:0]             m_axis_tdest_reg;
 wire [RADIX*AXIS_USER_WIDTH-1:0]             m_axis_tuser_reg;
 
 // Instantiation of switch crossbar logic
-switch_crossbar #(
+switch_crossbar_iq_voq #(
     .AXIS_DATA_WIDTH(AXIS_DATA_WIDTH),
     .AXIS_KEEP_WIDTH(AXIS_KEEP_WIDTH),
     .AXIS_ID_ENABLE(AXIS_ID_ENABLE),

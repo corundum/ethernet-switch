@@ -26,7 +26,7 @@ THE SOFTWARE.
 `timescale 1ns / 1ps
 `default_nettype none
 
-module switch_crossbar #
+module switch_crossbar_iq_voq #
 (
     // AXI streaming interface parameters
     // Width of data bus in bits
