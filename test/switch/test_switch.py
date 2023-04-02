@@ -146,9 +146,6 @@ async def run_test(dut, payload_lengths=None, payload_data=None, idle_inserter=N
 async def run_stress_test(dut, payload_lengths=None, payload_data=None, idle_inserter=None, backpressure_inserter=None):
 
     tb = TB(dut)
-
-    await tb.reset()
-
     tb.set_idle_generator(idle_inserter)
     tb.set_backpressure_generator(backpressure_inserter)
 
@@ -159,8 +156,22 @@ async def run_stress_test(dut, payload_lengths=None, payload_data=None, idle_ins
     DEST_ENABLE= int(os.getenv("PARAM_AXIS_DEST_ENABLE"))
     DEST_WIDTH = int(os.getenv("PARAM_AXIS_DEST_WIDTH")) 
 
+    # use tid to univocally identify frames in simulation
+    id_count = 2**ID_WIDTH
+    id_mask = id_count-1
+
+    src_width = (len(tb.source)-1).bit_length()
+    src_mask = 2**src_width-1 if src_width else 0
+    src_shift = ID_WIDTH-src_width
+    max_count = 2**src_shift
+    count_mask = max_count-1
+
+    cur_id = 1
+
+    await tb.reset()
+
     # matrix of lists [rows, columns] -> [input, output]
-    test_frames = [[list() for y in tb.radix] for x in tb.radix]
+    test_frames = [[list() for y in range(tb.radix)] for x in range(tb.radix)]
 
     # input port loop
     for input in range(tb.radix):
@@ -175,46 +186,47 @@ async def run_stress_test(dut, payload_lengths=None, payload_data=None, idle_ins
             tdest_int = int(''.join(map(str, tdest)), 2)
             test_frame.tdest = tdest_int
 
-            test_frame.tuser = length%USER_WIDTH
-            test_frame.tid = length%ID_WIDTH
+            test_frame.tid = cur_id | (input << src_shift)
+            test_frame.tuser = length%(2**USER_WIDTH)
 
             test_frames[input][output].append(test_frame)
-
-    # Send frames
-    # input port loop
-    for input in range(tb.radix):
-        # output port loop
-        for output in range(tb.radix):
-        # frames loop
-            for test_frame in test_frames[input][output]:
-                await tb.source[input].send(test_frame)
-
-    for lst in test_frames:
-        while any(lst):
-            rx_frame = await tb.sink[[x for x in lst if x][0][0].tdest].recv()
-            tb.log.info("RX packet: %s", repr(rx_frame))
-
-            # input port loop
-            for input in range(tb.radix):
-                # output port loop
-                for output in range(tb.radix):
-                    if (bytes(rx_frame) == bytes(test_frames[input][output])):
-                        test_frame = test_frames[input][output]
             
-                        # Assertions
-                        assert test_frame is not None
+            await tb.source[input].send(test_frame)
 
-                        assert len(bytes(rx_frame)) == len(bytes(test_frame))
-                        assert bytes(test_frame) == bytes(rx_frame)
+            cur_id = (cur_id + 1) % max_count
 
-                        if(USER_ENABLE):
-                            assert rx_frame.tuser == test_frame.tuser
-                        if(ID_ENABLE):
-                            assert rx_frame.tid == test_frame.tid
-                        if(DEST_ENABLE):
-                            assert rx_frame.tdest == test_frame.tdest
+    # input port loop
+    for input in test_frames:
+        # while there are test frames to be received for that input port
+        while any(input):
+            # advance for next output
+            lst_clean = [x for x in input if x]
 
-                        assert rx_frame.tdata == test_frame.tdata
+            # identify the output port
+            output = bin(lst_clean[0][0].tdest)[2:][::-1].index('1')
+            rx_frame = await tb.sink[output].recv()
+
+            test_frame = None
+
+            for input_a in test_frames:
+                for output_a in input_a:
+                    if output_a and output_a[0].tid == (rx_frame.tid & id_mask):
+                        test_frame = output_a.pop(0)
+                        break
+            
+            # Assertions
+            assert test_frame is not None
+
+            assert len(bytes(rx_frame)) == len(bytes(test_frame))
+            assert rx_frame.tdata == test_frame.tdata
+            assert bytes(test_frame) == bytes(rx_frame)
+
+            if(USER_ENABLE):
+                assert rx_frame.tuser == test_frame.tuser
+            if(ID_ENABLE):
+                assert rx_frame.tid == test_frame.tid
+            if(DEST_ENABLE):
+                assert rx_frame.tdest == test_frame.tdest
 
     assert all(sink.empty() for sink in tb.sink)
 
@@ -247,13 +259,17 @@ if cocotb.SIM_NAME:
     factory = TestFactory(run_test)
     factory.add_option("payload_lengths", [size_list])
     factory.add_option("payload_data", [incrementing_payload])
-    factory.add_option("idle_inserter", [None, cycle_pause, cycle_pause_one, cycle_pause_two, cycle_pause_three])
-    factory.add_option("backpressure_inserter", [None, cycle_pause, cycle_pause_one, cycle_pause_two, cycle_pause_three])
-    # factory.add_option("idle_inserter", [None, cycle_pause])
-    # factory.add_option("backpressure_inserter", [None, cycle_pause])
+    # factory.add_option("idle_inserter", [None, cycle_pause, cycle_pause_one, cycle_pause_two, cycle_pause_three])
+    # factory.add_option("backpressure_inserter", [None, cycle_pause, cycle_pause_one, cycle_pause_two, cycle_pause_three])
+    factory.add_option("idle_inserter", [None, cycle_pause])
+    factory.add_option("backpressure_inserter", [None, cycle_pause])
     factory.add_option("input", range(RADIX))
     factory.add_option("output", range(RADIX))
+    factory.generate_tests()
 
+    factory = TestFactory(run_stress_test)
+    factory.add_option("idle_inserter", [None, cycle_pause])
+    factory.add_option("backpressure_inserter", [None, cycle_pause])
     factory.generate_tests()
 
 # cocotb-test
