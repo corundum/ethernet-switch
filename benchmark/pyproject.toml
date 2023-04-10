@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "switch_bench"
+version = "0.1.0"
+description = ""
+authors = ["Carlos Megías <narg@ugr.es>"]
+readme = "README.md"
+packages = [{include = "switch_bench"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+cocotb = "^1.7.2"
+cocotb-bus = "^0.2.1"
+cocotb-test = "^0.2.4"
+cocotbext-axi = "^0.1.20"
+pytest = "^7.2.1"
+scapy = "^2.5.0"
+cocotbext-eth = "^0.1.20"
+pytest-xdist = "^3.1.0"
+jinja2 = "^3.1.2"
+click = "^8.1.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

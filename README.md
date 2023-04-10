@@ -24,6 +24,12 @@ Tests associated to each implementation can be run by setting up a virtual envir
 
 Just run `poetry shell` and then `poetry install`.
 
+## Benchmark
+A command line interface (CLI) written in Python is provided to launch benchmark tests for the different switch architectures. The tool provides a command to generate **traffic** patterns which are based on individual frames defined by: input (arrival) port, output (destination) port and size in bytes. Currently, the size of the frame can be the same for each one or taken from a 
+uniform distribution within a specified range. The traffic patern obtained is stored in a .txt (.csv). The **latency** command launches the benchmark for the selected switch architecture and traffic pattern. Options such as the radix of the switch or the width of the data bus can be configured. The results of the benchmark are stores in another file for further processing.
+
+The main purpose of this benchmark is to test the performance for the different switch architectures implemented and compare them against each other.
+
 ## Modules
 
 ### `switch`
