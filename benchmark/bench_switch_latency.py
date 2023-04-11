@@ -58,6 +58,8 @@ class TB:
         self.log.setLevel(logging.DEBUG)
 
         cocotb.start_soon(Clock(dut.clk, 1, units="ns").start())
+        if (str(os.getenv("ARCHITECTURE")) == "oq"):
+            cocotb.start_soon(Clock(dut.clk_su, 1/self.radix, units="ns").start())
 
         self.source = [AxiStreamSource(AxiStreamBus.from_prefix(dut, f"s{k:02d}_axis"), dut.clk, dut.rst) for k in range(self.radix)]
         self.sink = [AxiStreamSink(AxiStreamBus.from_prefix(dut, f"m{k:02d}_axis"), dut.clk, dut.rst) for k in range(self.radix)]
@@ -73,15 +75,29 @@ class TB:
                 sink.set_pause_generator(generator())
 
     async def reset(self):
-        self.dut.rst.setimmediatevalue(0)
-        await RisingEdge(self.dut.clk)
-        await RisingEdge(self.dut.clk)
-        self.dut.rst.value = 1
-        await RisingEdge(self.dut.clk)
-        await RisingEdge(self.dut.clk)
-        self.dut.rst.value = 0
-        await RisingEdge(self.dut.clk)
-        await RisingEdge(self.dut.clk)
+        if (str(os.getenv("ARCHITECTURE")) != "oq"):
+            self.dut.rst.setimmediatevalue(0)
+            await RisingEdge(self.dut.clk)
+            await RisingEdge(self.dut.clk)
+            self.dut.rst.value = 1
+            await RisingEdge(self.dut.clk)
+            await RisingEdge(self.dut.clk)
+            self.dut.rst.value = 0
+            await RisingEdge(self.dut.clk)
+            await RisingEdge(self.dut.clk)
+        else:
+            self.dut.rst.setimmediatevalue(0)
+            self.dut.rst_su.setimmediatevalue(0)
+            await RisingEdge(self.dut.clk)
+            await RisingEdge(self.dut.clk)
+            self.dut.rst.value = 1
+            self.dut.rst_su.value = 1
+            await RisingEdge(self.dut.clk)
+            await RisingEdge(self.dut.clk)
+            self.dut.rst.value = 0
+            self.dut.rst_su.value = 0
+            await RisingEdge(self.dut.clk)
+            await RisingEdge(self.dut.clk)
 
 async def latency_test(dut, idle_inserter=None, backpressure_inserter=None):
 

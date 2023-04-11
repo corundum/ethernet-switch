@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 import click
 
-switch_suffixes = ['iq', 'iq_voq']
+switch_suffixes = ['iq', 'iq_voq', 'oq']
 traffic_types = ['custom', 'min', 'max', 'uniform']
 
 class SwitchSuffix(click.ParamType):

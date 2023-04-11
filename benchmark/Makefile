@@ -24,7 +24,7 @@ SIM ?= icarus
 WAVES ?= 0
 
 COCOTB_HDL_TIMEUNIT = 1ns
-COCOTB_HDL_TIMEPRECISION = 1ps
+COCOTB_HDL_TIMEPRECISION = 10fs
 
 # benchmarking parameters
 export RADIX ?= 2
@@ -43,6 +43,8 @@ ifeq ($(DUT), switch_iq)
 	VERILOG_SOURCES += ../lib/verilog-axis/rtl/axis_fifo.v ../lib/verilog-axis/rtl/axis_arb_mux.v ../lib/verilog-axis/rtl/arbiter.v ../lib/verilog-axis/rtl/priority_encoder.v
 else ifeq ($(DUT), switch_iq_voq)
 	VERILOG_SOURCES += ../lib/verilog-axis/rtl/axis_fifo.v ../lib/verilog-axis/rtl/axis_arb_mux.v ../lib/verilog-axis/rtl/arbiter.v ../lib/verilog-axis/rtl/priority_encoder.v
+else ifeq ($(DUT), switch_oq)
+	VERILOG_SOURCES += ../lib/verilog-axis/rtl/axis_async_fifo.v ../lib/verilog-axis/rtl/axis_arb_mux.v ../lib/verilog-axis/rtl/arbiter.v ../lib/verilog-axis/rtl/priority_encoder.v
 endif
 
 # module parameters
