@@ -20,7 +20,7 @@ The most "advanced" design for the switch does not use suffixes for its files an
 
 None of the current switch designs support broadcasting.
 
-All the architectures provided with test files and can be evaluated by the provided benchmarking tool.
+All the architectures are provided with test files and can be evaluated by the provided benchmarking tool.
 
 ## Tests
 Tests associated to each implementation can be run by setting up a virtual environment using **poetry** and the given poetry.lock and pyproject.toml files in the corresponding directory.
