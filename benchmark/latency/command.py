@@ -49,28 +49,33 @@ def latency(architecture:str, r:int, d: int, f:str):
     # checks:
     # if 'f' is  not a valid file name take the newest file as default
     dir_file = "traffic/profiles"
-    files = os.listdir(dir_file)
-    if f not in files:
-        paths = [os.path.join(dir_file, basename) for basename in files]
-        file_path = max(paths, key=os.path.getctime)
-    else:
-        file_path = f'{dir_file}/{f}'
 
-    # if radix of the traffic profile does not match the radix of the experiment
-    with open(file_path) as file:
-        metadata = file.readline().strip('\n')
-        metadata_list = metadata.split(",")    
-        file.close()
+    try:
+        files = os.listdir(dir_file)
+        if f not in files:
+            paths = [os.path.join(dir_file, basename) for basename in files]
+            file_path = max(paths, key=os.path.getctime)
+        else:
+            file_path = f'{dir_file}/{f}'
 
-    if(int(metadata_list[3]) == r):
-        os.environ['BENCH_FILE'] = file_path
-        os.environ['ARCHITECTURE'] = architecture
-        os.environ['DATA_WIDTH'] = str(d)
-        print(f'Selected traffic profile: {file_path}')
-        print('Starting latency benchmark.')
-        call(f'make clean SUFFIX={architecture} DATA_WIDTH={d} RADIX={r}', shell=True)
-        call(f'make WAVES=1 SUFFIX={architecture} DATA_WIDTH={d} RADIX={r} MODULE={"bench_switch_latency"}', shell=True)
-        # call(f'make WAVES=1 SUFFIX={architecture} DATA_WIDTH={d} RADIX={r} MODULE={"bench_switch_latency"}', shell=True)
-        print('Finished latency benchmark.')
-    else:
-        print(f'Radix {r} does not match radix {metadata_list[3]} in {file_path} traffic profile')
+        with open(file_path) as file:
+            metadata = file.readline().strip('\n')
+            metadata_list = metadata.split(",")    
+            file.close()
+
+        # if radix of the traffic profile does not match the radix of the experiment
+        if(int(metadata_list[3]) == r):
+            os.environ['BENCH_FILE'] = file_path
+            os.environ['ARCHITECTURE'] = architecture
+            os.environ['DATA_WIDTH'] = str(d)
+            print(f'Selected traffic profile: {file_path}')
+            print('Starting latency benchmark.')
+            call(f'make clean SUFFIX={architecture} DATA_WIDTH={d} RADIX={r}', shell=True)
+            call(f'make WAVES=1 SUFFIX={architecture} DATA_WIDTH={d} RADIX={r} MODULE={"bench_switch_latency"}', shell=True)
+            # call(f'make WAVES=1 SUFFIX={architecture} DATA_WIDTH={d} RADIX={r} MODULE={"bench_switch_latency"}', shell=True)
+            print('Finished latency benchmark.')
+        else:
+            print(f'Radix {r} does not match radix {metadata_list[3]} in {file_path} traffic profile')
+    
+    except FileNotFoundError:
+        print("There is no traffic pattern file available.")
