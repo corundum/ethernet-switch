@@ -280,13 +280,13 @@ if cocotb.SIM_NAME:
 
 tests_dir = os.path.abspath(os.path.dirname(__file__))
 rtl_dir = os.path.abspath(os.path.join(tests_dir, '..', '..', 'rtl'))
-lib_dir = os.path.abspath(os.path.join(rtl_dir, '..', '..', 'lib'))
+lib_dir = os.path.abspath(os.path.join(rtl_dir, '..', 'lib'))
 axis_rtl_dir = os.path.abspath(os.path.join(lib_dir, 'verilog-axis', 'rtl'))
 
 # each run
 @pytest.mark.parametrize("data_width", [8, 16, 32, 64, 128, 256, 512])
-@pytest.mark.parametrize("radix", [4])
-def test_switch_oq_wrap(request, data_width, radix):
+@pytest.mark.parametrize("radix", [2, 4])
+def test_switch_oq(request, data_width, radix):
     dut = "switch_oq"
     wrapper = f"{dut}_wrap_{radix}x{radix}"    
     module = os.path.splitext(os.path.basename(__file__))[0]
@@ -301,9 +301,10 @@ def test_switch_oq_wrap(request, data_width, radix):
         ).wait()
 
     verilog_sources = [
+        os.path.join(tests_dir, f"{wrapper}.v"),
         os.path.join(rtl_dir, f"{dut}.v"),
         os.path.join(rtl_dir, f"switch_crossbar_oq.v"),
-        os.path.join(axis_rtl_dir, f"axis_fifo.v"),
+        os.path.join(axis_rtl_dir, f"axis_async_fifo.v"),
         os.path.join(axis_rtl_dir, f"axis_arb_mux.v"),
         os.path.join(axis_rtl_dir, f"arbiter.v"),
         os.path.join(axis_rtl_dir, f"priority_encoder.v"),
@@ -314,7 +315,7 @@ def test_switch_oq_wrap(request, data_width, radix):
     parameters['AXIS_DATA_WIDTH'] = data_width
     parameters['AXIS_KEEP_WIDTH'] = parameters['AXIS_DATA_WIDTH'] // 8
     parameters['AXIS_ID_ENABLE'] = 1
-    parameters['AXIS_ID_WIDTH'] = 8
+    parameters['AXIS_ID_WIDTH'] = 64
     parameters['AXIS_USER_ENABLE'] = 1
     parameters['AXIS_USER_WIDTH'] = 17    
     parameters['RADIX'] = radix
