@@ -112,7 +112,7 @@ generate
             .USER_WIDTH(AXIS_USER_WIDTH),      
             .LAST_ENABLE(1),
             .UPDATE_TID(0),       
-            .ARB_TYPE_ROUND_ROBIN(0),                                                                    
+            .ARB_TYPE_ROUND_ROBIN(1),                                                                    
             .ARB_LSB_HIGH_PRIORITY(1)        
         )
         axis_arb_mux_inst (
@@ -146,6 +146,7 @@ generate
     end
 endgenerate
 
+// output mapping
 assign m_axis_tdata = m_axis_tdata_reg;
 assign m_axis_tkeep = m_axis_tkeep_reg;
 assign m_axis_tvalid = m_axis_tvalid_reg;

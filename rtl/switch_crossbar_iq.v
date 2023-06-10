@@ -80,35 +80,10 @@ module switch_crossbar_iq #
 );
 
 // auxiliar registers and wires
-reg [RADIX*RADIX-1:0]  s_arbiter_axis_tvalid = 0;
-reg [RADIX-1:0]  s_axis_tready_int = 0;
+wire [RADIX*RADIX-1:0]  s_arbiter_axis_tvalid;
+wire [RADIX*RADIX-1:0]  s_axis_tready_aux;
+wire [RADIX-1:0]  s_axis_tready_int;
 wire [RADIX*RADIX-1:0] s_axis_tready_reg;
-
-// input arbiter selected based on tdest signal
-integer m, k, h, j;
-always @* begin
-    // check which input ports have something to transmit (s_axis_tvalid[k])
-    // then check individually which output port they need (s_axis_tdest[k][m])
-    s_arbiter_axis_tvalid = 0;
-    // output port loop
-    for (m = 0; m < RADIX; m = m + 1) begin
-        // input port loop
-        for (k = 0; k < RADIX; k = k + 1) begin
-            // which connections are valid
-            s_arbiter_axis_tvalid[m*RADIX+k] = s_axis_tvalid[k] & s_axis_tdest[m+k*RADIX];
-        end
-        // s_arbiter_axis_tvalid[m*RADIX +: RADIX] = s_axis_tvalid & s_arbiter_axis_tvalid[m*RADIX +: RADIX];
-    end
-
-    s_axis_tready_int = 0;
-    // input port loop
-    for (h = 0; h < RADIX; h = h + 1) begin
-        // output port loop
-        for (j = 0; j < RADIX; j = j + 1) begin
-            s_axis_tready_int[h] = s_axis_tready_int[h] | (s_axis_tready_reg[h+j*RADIX] & s_arbiter_axis_tvalid[h+j*RADIX]);
-        end
-    end    
-end
 
 assign s_axis_tready = s_axis_tready_int;
 
@@ -124,8 +99,16 @@ wire [RADIX*AXIS_USER_WIDTH-1:0]             m_axis_tuser_reg;
 
 // Instantiation of one arbiter per output port
 generate
-    genvar n;
+    genvar n, k;
     for (n = 0; n < RADIX; n = n + 1) begin : arbiters
+        for (k = 0; k < RADIX; k = k + 1) begin
+            // which connections are valid
+            assign s_arbiter_axis_tvalid[n*RADIX+k] = s_axis_tvalid[k] && s_axis_tdest[n+k*RADIX];
+            assign s_axis_tready_aux[n*RADIX+k] = s_axis_tready_reg[n+k*RADIX] && s_arbiter_axis_tvalid[n+k*RADIX];
+        end
+
+        assign s_axis_tready_int[n] = |s_axis_tready_aux[n*RADIX +: RADIX];
+
         axis_arb_mux #(
             .S_COUNT(RADIX),
             .DATA_WIDTH(AXIS_DATA_WIDTH),
@@ -140,7 +123,7 @@ generate
             .USER_WIDTH(AXIS_USER_WIDTH),      
             .LAST_ENABLE(1),
             .UPDATE_TID(0),       
-            .ARB_TYPE_ROUND_ROBIN(0),                                                                    
+            .ARB_TYPE_ROUND_ROBIN(1),                                                                    
             .ARB_LSB_HIGH_PRIORITY(1)        
         )
         axis_arb_mux_inst (
@@ -174,6 +157,7 @@ generate
     end
 endgenerate
 
+// output mapping
 assign m_axis_tdata = m_axis_tdata_reg;
 assign m_axis_tkeep = m_axis_tkeep_reg;
 assign m_axis_tvalid = m_axis_tvalid_reg;

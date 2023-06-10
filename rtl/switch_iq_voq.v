@@ -108,7 +108,7 @@ generate
 
         for (m = 0; m < RADIX; m = m + 1) begin : virtual_queues
             // select VOQ FIFO for each input: for input n and output m
-            assign s_axis_tvalid_fifos[n*RADIX + m] = s_axis_tvalid[n] & s_axis_tdest[n*RADIX + m];
+            assign s_axis_tvalid_fifos[n*RADIX + m] = s_axis_tvalid[n] && s_axis_tdest[n*RADIX + m];
 
             axis_fifo #(
                 .DEPTH(FIFO_DEPTH_CYCLES * AXIS_DATA_WIDTH/8),
