@@ -144,7 +144,7 @@ generate
     for (n = 0; n < RADIX; n = n + 1) begin : input_ports
         // map to group of FIFOs for output port
         assign s_axis_tvalid_input[n*RADIX +: RADIX] = {RADIX{s_axis_tvalid[n]}} & (s_axis_tdest[n*RADIX +: RADIX]);
-        assign s_axis_tready_input[n] = |(s_axis_tready_fifos[n*RADIX +: VC_COUNT]);
+        assign s_axis_tready_input[n] = |(s_axis_tready_fifos[n*RADIX +: RADIX]);
 
         for (m = 0; m < RADIX; m = m + 1) begin : output_ports
             // map valid and tuser to write in VC FIFO
